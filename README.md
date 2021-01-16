@@ -1,2 +1,2 @@
-# Vagrant
-Vagrant Projects
+![Vagrant](https://www.vagrantup.com/img/logo-hashicorp.svg)
+
