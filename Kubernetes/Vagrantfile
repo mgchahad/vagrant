@@ -79,7 +79,6 @@ Vagrant.configure("2") do |config|
                apt-mark hold kubelet kubeadm kubectl &&  systemctl restart kubelet && \
                kubeadm init >> kubeadm_join && \
                mkdir -p /home/vagrant/.kube && sudo cp -r /etc/kubernetes/admin.conf /home/vagrant/.kube/config && chown vagrant. /home/vagrant/.kube/config && \
-               sleep 30 && \
                kubectl apply -f https://docs.projectcalico.org/v3.17/manifests/calico.yaml --kubeconfig /home/vagrant/.kube/config && \
                cd /home/vagrant/.ssh && cat id_rsa.pub >> authorized_keys && \
                tail /home/vagrant/kubeadm_join -n2"
