@@ -1,0 +1,87 @@
+Vagrant.configure("2") do |config|
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+    v.cpus = 2
+  end
+  config.vm.provision "shell", inline: "swapoff -a"
+  config.vm.define "K8s-Node01", primary: true do |node01|
+    node01.vm.hostname = "k8s-node01"
+    node01.vm.box = "ubuntu/bionic64"
+    node01.vm.network "public_network", :bridge => 'eno1', ip: "192.168.1.60", use_dhcp_assigned_default_route: true
+    node01.vm.provision "shell",
+    run: "always",
+    inline: "route add default gw 192.168.1.1"
+    node01.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/id_rsa.pub"
+    node01.vm.provision "shell",
+    inline: "apt-get update -y && apt-get install -y vim tree net-tools curl git conntrack && \
+             apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common gnupg2 python3 && \
+             curl -fsSL https://download.docker.com/linux/ubuntu/gpg |  apt-key add - && \
+             apt-key fingerprint 0EBFCD88 && \
+             add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable' && \
+             apt-get update -y &&  apt-get install -y docker-ce docker-ce-cli containerd.io && \
+             curl -L \"https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)\" -o /usr/local/bin/docker-compose && \
+             chmod +x /usr/local/bin/docker-compose && \
+             ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose && \
+             curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg |  apt-key add - && \
+             echo 'deb https://apt.kubernetes.io/ kubernetes-xenial main' >> /etc/apt/sources.list.d/kubernetes.list && \
+             apt-get update -y && apt-get install -y kubeadm && \
+             apt-mark hold kubeadm && \
+             cd /home/vagrant/.ssh && cat id_rsa.pub >> authorized_keys" 
+  end
+  config.vm.provision "shell", inline: "swapoff -a"
+  config.vm.define "K8s-Node02", primary: true do |node02|
+    node02.vm.hostname = "k8s-node01"
+    node02.vm.box = "ubuntu/bionic64"
+    node02.vm.network "public_network", :bridge => 'eno1', ip: "192.168.1.70", use_dhcp_assigned_default_route: true
+    node02.vm.provision "shell",
+    run: "always",
+    inline: "route add default gw 192.168.1.1"
+    node02.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/id_rsa.pub"
+    node02.vm.provision "shell",
+    inline: "apt-get update -y && apt-get install -y vim tree net-tools curl git conntrack && \
+             apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common gnupg2 python3 && \
+             curl -fsSL https://download.docker.com/linux/ubuntu/gpg |  apt-key add - && \
+             apt-key fingerprint 0EBFCD88 && \
+             add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable' && \
+             apt-get update -y &&  apt-get install -y docker-ce docker-ce-cli containerd.io && \
+             curl -L \"https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)\" -o /usr/local/bin/docker-compose && \
+             chmod +x /usr/local/bin/docker-compose && \
+             ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose && \
+             curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg |  apt-key add - && \
+             echo 'deb https://apt.kubernetes.io/ kubernetes-xenial main' >> /etc/apt/sources.list.d/kubernetes.list && \
+             apt-get update -y && apt-get install -y kubeadm && \
+             apt-mark hold kubeadm && \
+             cd /home/vagrant/.ssh && cat id_rsa.pub >> authorized_keys" 
+  end
+  config.vm.provision "shell", inline: "swapoff -a"
+  config.vm.define "K8s-Master" do |master|
+    master.vm.hostname = "k8s-master"
+    master.vm.box = "ubuntu/bionic64"
+    master.vm.network "public_network", :bridge => 'eno1', ip: "192.168.1.50", use_dhcp_assigned_default_route: true
+    master.vm.provision "shell",
+    run: "always",
+    inline: "route add default gw 192.168.1.1"
+    master.vm.provision "file", source: "~/.ssh/id_rsa", destination: "~/.ssh/id_rsa"
+    master.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/id_rsa.pub"
+    master.vm.provision "shell",
+      inline: "apt-get update -y && apt-get install -y vim tree net-tools curl git conntrack && \
+               apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common gnupg2 python3 && \
+               curl -fsSL https://download.docker.com/linux/ubuntu/gpg |  apt-key add - && \
+               apt-key fingerprint 0EBFCD88 && \
+               add-apt-repository 'deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable' && \
+               apt-get update -y &&  apt-get install -y docker-ce docker-ce-cli containerd.io && \
+               curl -L \"https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)\" -o /usr/local/bin/docker-compose && \
+               chmod +x /usr/local/bin/docker-compose && \
+               ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose && \
+               curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg |  apt-key add - && \
+               echo 'deb https://apt.kubernetes.io/ kubernetes-xenial main' >> /etc/apt/sources.list.d/kubernetes.list && \
+               apt-get update -y && apt-get install -y kubelet kubeadm kubectl && \
+               apt-mark hold kubelet kubeadm kubectl &&  systemctl restart kubelet && \
+               kubeadm init >> kubeadm_join && \
+               mkdir -p /home/vagrant/.kube && sudo cp -r /etc/kubernetes/admin.conf /home/vagrant/.kube/config && chown vagrant. /home/vagrant/.kube/config && \
+               sleep 30 && \
+               kubectl apply -f https://docs.projectcalico.org/v3.17/manifests/calico.yaml --kubeconfig /home/vagrant/.kube/config && \
+               cd /home/vagrant/.ssh && cat id_rsa.pub >> authorized_keys && \
+               tail /home/vagrant/kubeadm_join -n2"
+  end
+end
