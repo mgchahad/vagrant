@@ -4,7 +4,7 @@
 
 Antes de iniciar a instalação e configuração do cluster de Kubernetes aplique ajustes no arquivo do Vagrantfile e no sistema operacional. Segue abaixo os ajustes necessários:
 
-- bridge: Adicionar o nome da interface de rede do Windows = Acesse o powershell/prompt e digite o comando abaixo para obter o nome da interface:
+- bridge: Adicionar o nome da interface de rede do Windows. Acesse o powershell/prompt e digite o comando abaixo para obter o nome da interface:
 
 ```
 ipconfig
